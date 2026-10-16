@@ -1,5 +1,7 @@
 import os
 import logging
+from threading import Thread
+from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
@@ -10,6 +12,17 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# ساخت یک سرور وب کوچک برای راضی نگه داشتن Render
+flask_app = Flask('')
+
+@flask_app.route('/')
+def home():
+    return "Bot is alive!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    flask_app.run(host='0.0.0.0', port=port)
 
 # مقداردهی اولیه دیتابیس Supabase
 try:
@@ -57,8 +70,12 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("کد کار باید عدد باشد.")
 
 def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+    # اجرای سرور وب در یک ترد جداگانه
+    t = Thread(target=run_flask)
+    t.start()
 
+    # اجرای ربات تلگرام
+    app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("add", add))
     app.add_handler(CommandHandler("list", list_tasks))
@@ -69,4 +86,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
