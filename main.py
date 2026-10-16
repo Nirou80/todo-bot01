@@ -67,6 +67,6 @@ def main():
     print("Bot is running online on Render...")
     app.run_polling()
 
-if name == "main":
+if __name__ == "__main__":
     main()
 
